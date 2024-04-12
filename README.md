@@ -1,7 +1,3 @@
-Natuurlijk, hier is de bijgewerkte `README.md` met icons en emojis voor een meer visuele en aantrekkelijke weergave:
-
----
-
 # 🎮 Wordle Game
 
 ## 📝 Projectomschrijving
