@@ -1,61 +1,102 @@
-<?php
-$correct_word = str_split("woord"); // Het woord dat moet worden geraden
-?>
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Wordle Spel</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Difficulty Selection</title>
     <style>
-        .correct { color: green; }
-        .misplaced { color: yellow; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 15vh;
+            background-color: black;
+
+        }
+        .container {
+            text-align: center;
+        }
+        .difficulty-btn {
+            border: none;
+            padding: 20px 40px; /* Aangepaste padding voor grotere knoppen */
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px; /* Aangepaste lettergrootte */
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            background-color: rgb(17, 131, 17);
+            border: 2px solid black;
+            color: white;
+        }
+        .difficulty-btn:hover {
+            background-color: #65c742; /* Default hover kleur */
+        }
+        .difficulty-btn.easy:hover {
+            background-color: #04ff00; /* Donker oranje voor easy */
+        }
+        .difficulty-btn.normal:hover {
+            background-color: #e68a00; /* Donker oranje voor normal */
+        }
+        .difficulty-btn.hard:hover {
+            background-color: #ff3333; /* Rood voor hard */
+        }
+        .difficulty-btn.expert:hover {
+            background-color: #570747; /* Donker rood voor expert */
+        }
+
+        .login-button {
+        background-color: #008CBA; /* Blauw */
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        transition-duration: 0.4s;
+    }
+
+    .login-button:hover {
+        background-color: #4CAF50; /* Groen */
+        color: white;
+    }
     </style>
 </head>
 <body>
-    <h1>Wordle Spel</h1>
-
-    <form method="post" action="" id="wordleForm">
-        Naam: <input type="text" name="naam" required><br>
-        Woord: <input type="text" name="woord" maxlength="5" required id="inputWord"><br>
-        <input type="submit" value="Check">
-    </form>
-
-    <h2>Top 10 Scores</h2>
-    <ul id="scoreList">
-        <?php
-        if ($result->num_rows > 0) {
-            while($row = $result->fetch_assoc()) {
-                echo "<li>" . $row["naam"] . ": " . $row["score"] . "</li>";
-            }
-        } else {
-            echo "Geen scores gevonden.";
-        }
-        ?>
-    </ul>
+    
+    <div class="container">
+        <h2>Choose a difficulty level</h2>
+        <header>
+        
+        </header>
+        <button class="difficulty-btn easy" onclick="window.location.href='page1.php'">Easy</button>
+        <button class="difficulty-btn normal" onclick="selectDifficulty('normal')">Normal</button><br>
+        <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">Hard</button>
+        <button class="difficulty-btn expert" onclick="selectDifficulty('expert')">Expert</button>
+        <button class="login-button" onclick="window.location.href='login.php'">Inloggen</button>
+    </div>
 
     <script>
-        var correctWord = <?php echo json_encode($correct_word); ?>;
-        document.getElementById('wordleForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            var inputWord = document.getElementById('inputWord').value.split('');
-            var result = '';
-            for (var i = 0; i < inputWord.length; i++) {
-                if (inputWord[i] === correctWord[i]) {
-                    result += '<span class="correct">' + inputWord[i] + '</span>';
-                } else if (correctWord.includes(inputWord[i])) {
-                    result += '<span class="misplaced">' + inputWord[i] + '</span>';
-                } else {
-                    result += inputWord[i];
-                }
-            }
-            document.getElementById('scoreList').innerHTML = '<li>' + result + '</li>' + document.getElementById('scoreList').innerHTML;
-            document.getElementById('inputWord').value = '';
-        });
+        function selectDifficulty(difficulty) {
+            // You can add your logic here for what to do when a difficulty is selected
+            console.log('Selected difficulty:', difficulty);
+        }
     </script>
-
 </body>
 </html>
-
-<?php
-$conn->close();
-?>
