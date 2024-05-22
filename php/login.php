@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html>
 <head>
     <title>Inloggen</title>
+    <link rel = "stylesheet" type = "text/css" href = "../css/login.css">
 </head>
 <body>
     <form method="post" action="">

@@ -1,0 +1,83 @@
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.login-container {
+    width: 350px;
+    padding: 40px;
+    background-color: #fff;
+    box-shadow: 0px 14px 28px rgba(0,0,0,0.25), 0px 10px 10px rgba(0,0,0,0.22);
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.login-container:hover {
+    transform: scale(1.02);
+}
+
+.login-container h1 {
+    text-align: center;
+    color: #5C6BC0;
+    font-size: 26px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #5C6BC0;
+    padding-bottom: 10px;
+}
+
+.login-container form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login-container form input {
+    margin: 0 auto 20px auto;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 80%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-container form input:focus {
+    border-color: #5C6BC0;
+    outline: none;
+    box-shadow: 0 0 8px rgba(92, 107, 192, 0.6);
+}
+
+.login-container form input[type="submit"] {
+    background-color: #5C6BC0;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 50%;
+    align-self: center;
+    padding: 12px;
+    border-radius: 4px;
+}
+
+.login-container form input[type="submit"]:hover {
+    background-color: #3F51B5;
+}
+
+.login-container form input[type="submit"]:active {
+    transform: scale(0.97);
+}
+
+.login-container form label {
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    margin: 0 auto 15px auto;
+    font-size: 14px;
+    color: #333;
+}
