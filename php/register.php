@@ -1,48 +1,41 @@
 <?php
-// Start de sessie
-session_start();
-// Database configuratie
+// Database configuration
 $servername = "localhost";
 $username = "root";
 $password = "";
 $database = "wordle_game";
-// Maak verbinding
+
+// Create connection
 $conn = new mysqli($servername, $username, $password, $database);
-// Controleer de verbinding
+
+// Check connection
 if ($conn->connect_error) {
-    die("Verbinding mislukt: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];
-    // Controleer of de gebruikersnaam in de database bestaat
-    $stmt = $conn->prepare("SELECT id, password, admin FROM users WHERE username = ?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $stmt->store_result();
-    if ($stmt->num_rows > 0) {
-        $stmt->bind_result($id, $hashed_password, $admin);
-        $stmt->fetch();
-        // Verifieer het wachtwoord
-        if (password_verify($password, $hashed_password)) {
-            // Wachtwoord is correct, start een nieuwe sessie en sla de gebruikers-ID op
-            $_SESSION["userid"] = $id;
-            if ($admin >= 1) {
-                // Als de gebruiker adminniveau 1 of hoger heeft, doorsturen naar de adminpagina
-                header("Location: admin.php");
-            } else {
-                // Gebruiker heeft geen toegang tot de adminpagina
-               header("Location: choice.php");
-            }
-        } else {
-            // Ongeldig wachtwoord
-            echo "Ongeldig wachtwoord.";
-        }
+    $confirm_password = $_POST['confirm_password'];
+
+    // Check if passwords match
+    if ($password != $confirm_password) {
+        echo "Passwords do not match.";
     } else {
-        // Gebruikersnaam bestaat niet
-        echo "Geen account gevonden met die gebruikersnaam.";
+        // Hash the password
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+        // Insert new user into the database
+        $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+        $stmt->bind_param("ss", $username, $hashed_password);
+        if ($stmt->execute()) {
+            echo "Registration successful.";
+            header("Location: login.php");
+        } else {
+            echo "Error: " . $stmt->error;
+        }
+        $stmt->close();
     }
-    $stmt->close();
 }
 $conn->close();
 ?>
@@ -52,7 +45,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
+    <title>Register Page</title>
     <link rel="stylesheet" type="text/css" href="../css/style.css">
     <style>
         body {
@@ -100,14 +93,16 @@ $conn->close();
     </style>
 </head>
 <body>
-    <h1>Login</h1>
-    <form action="login.php" method="post">
+    <h1>Register</h1>
+    <form action="register.php" method="post">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
-        <input type="submit" value="Login">
-        <a href="register.php">Register here</a>
+        <label for="confirm_password">Confirm Password:</label>
+        <input type="password" id="confirm_password" name="confirm_password" required>
+        <input type="submit" value="Register">
+        <a href="login.php">Login here</a>
     </form>
 </body>
 </html>

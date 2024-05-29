@@ -1,50 +1,37 @@
 <?php
-    // Select a random word
+// Select a random word
 $words = array("woord", "ander", "spel", "code", "taak");
 $correct_word = str_split($words[array_rand($words)]);
-
-
-
 // Database connection
 $servername = "localhost";
 $username = "root";
 $password = "";
-$database = "lingo";
-
+$database = "wordle_game";
 $conn = new mysqli($servername, $username, $password, $database);
-
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $naam = $_POST['naam'];
-    $woord = $_POST['woord'];
-
-    $score = 0;
-    for ($i = 0; $i < strlen($woord); $i++) {
-        if (isset($correct_word[$i]) && $woord[$i] == $correct_word[$i]) {
-            $score++;
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
+    if ($_POST['action'] == 'deleteScores') {
+        // Delete all scores from the database
+        $sql = "DELETE FROM scores";
+        if ($conn->query($sql) === TRUE) {
+            echo "All scores have been deleted.";
+        } else {
+            echo "Error deleting scores: " . $conn->error;
         }
     }
-
-    $stmt = $conn->prepare("INSERT INTO scores (naam, score, datum) VALUES (?, ?, NOW())");
-    $stmt->bind_param("si", $naam, $score);
-    $stmt->execute();
-    $stmt->close();
 }
-
 // Fetch top 10 scores
-$sql = "SELECT naam, score FROM scores ORDER BY score DESC, datum ASC LIMIT 10";
+$sql = "SELECT id, naam, score FROM scores ORDER BY score DESC, datum ASC LIMIT 10";
 $result = $conn->query($sql);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wordle Spel</title>
+    <title>admin</title>
     <link rel="stylesheet" type="text/css" href="../css/style.css">
     <style>
         body {
@@ -129,6 +116,9 @@ $result = $conn->query($sql);
             color: green;
             font-weight: bold;
         }
+        .deleteScoreButton {
+            background: yellow;
+        }
         .misplaced {
             color: orange;
             font-weight: bold;
@@ -183,14 +173,11 @@ $result = $conn->query($sql);
 </head>
 <body>
     <h1>Wordle Spel</h1>
-        <form action="" method="post">
-            <button class="Logout" name="Logout">
-    </form>
-    <form action="index.html" method="post">
-        <button>logout</button>
+    <p>welkom admin<p>
+    <form action="login.php" method="post">
+        <button>Login</button>
     </form>
     <div class="container">
-      
         <div class="instructions">
             <div class="header">Uitleg</div>
             <p>Welcome to WordPlay!<br>
@@ -198,24 +185,22 @@ $result = $conn->query($sql);
             Enjoy unlimited games, challenge others and learn about words.<br>
                      <p id="dailyPuzzleText">Daily Puzzle #103 - Fri, May 24</p>
                     <!-- voeg hier nog dat de dag automatisch vervangt met bijvoorbeeld #104 - Fri, May 24 -->
-            <button id="tutorialButton">How to play</button>
+                    <button id="tutorialButton">How to play</button>
         </div>
         <div class="leaderboard">
             <div class="header">Leaderboard</div>
-            <button>Today</button>
-            <button>Yesterday</button>
-            <button>All Time</button>
             <ul id="scoreList">
                 <?php
                 if ($result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
-                        echo "<li>" . htmlspecialchars($row["naam"]) . ": " . htmlspecialchars($row["score"]) . "</li>";
+                        echo "<li>" . htmlspecialchars($row["naam"]) . ": " . htmlspecialchars($row["score"]) . " <button class='deleteScoreButton' data-scoreid='" . $row['id'] . "'>Delete</button></li>";
                     }
                 } else {
-                    echo "Geen scores gevonden.";
+                    echo "No scores found.";
                 }
                 ?>
             </ul>
+            <button id="deleteScoresButton">Delete All Scores</button>
         </div>
     </div>
     <form method="POST" action="">
@@ -242,21 +227,17 @@ $result = $conn->query($sql);
         var modal = document.getElementById("tutorialModal");
         var btn = document.getElementById("tutorialButton");
         var span = document.getElementsByClassName("close")[0];
-
         btn.onclick = function() {
             modal.style.display = "block";
         }
-
         span.onclick = function() {
             modal.style.display = "none";
         }
-
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";
             }
         }
-
         var correctWord = <?php echo json_encode($correct_word); ?>;
         document.getElementById('wordleForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -274,32 +255,50 @@ $result = $conn->query($sql);
             document.getElementById('scoreList').innerHTML = '<li>' + result + '</li>' + document.getElementById('scoreList').innerHTML;
             document.getElementById('woord').value = '';
         });
-
-
         // Get today's date
-var today = new Date();
+        var today = new Date();
+        // Options for formatting the date
+        var options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+        // Format the date
+        var formattedDate = today.toLocaleDateString('en-US', options);
+        // Create the puzzle number (this example uses 103, increment or adjust as needed)
+        var puzzleNumber = 103;
+        // Construct the display text
+        var displayText = `Daily Puzzle #${puzzleNumber} - ${formattedDate}`;
+        // Insert the display text into the appropriate element
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelector('p').innerText = displayText;
+        });
 
-// Options for formatting the date
-var options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-
-// Format the date
-var formattedDate = today.toLocaleDateString('en-US', options);
-
-// Create the puzzle number (this example uses 103, increment or adjust as needed)
-var puzzleNumber = 103;
-
-// Construct the display text
-var displayText = `Daily Puzzle #${puzzleNumber} - ${formattedDate}`;
-
-// Insert the display text into the appropriate element
-document.addEventListener('DOMContentLoaded', (event) => {
-    document.querySelector('p').innerText = displayText;
+        // Add this JavaScript code to handle the deletion of a single score
+document.querySelectorAll('.deleteScoreButton').forEach(button => {
+    button.addEventListener('click', function() {
+        const scoreId = this.getAttribute('data-scoreid');
+        if (confirm("Are you sure you want to delete this score?")) {
+            // Make an AJAX call to delete the specific score
+            fetch('delete_score.php', {
+                method: 'POST',
+                body: JSON.stringify({ scoreId: scoreId }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Score deleted successfully.");
+                    // Refresh the leaderboard after deleting the score
+                    location.reload();
+                } else {
+                    alert("Error deleting score.");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    });
 });
-
     </script>
 </body>
 </html>
-
 <?php
 $conn->close();
-?>
+?>  
