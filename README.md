@@ -27,7 +27,7 @@ Dit project is een eenvoudige implementatie van de populaire Wordle-game. Het st
     ```bash
     cd wordle-game
     ```
-3. Maak de database en tabellen aan. Gebruik hiervoor het SQL-script dat in de `database.sql` file staat.
+3. Maak de database en tabellen aan. Gebruik hiervoor het SQL-script dat in de `scores.sql` file staat.
 
 ### 🎮 Gebruik
 
