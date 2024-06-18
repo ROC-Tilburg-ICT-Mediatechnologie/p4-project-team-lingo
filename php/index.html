@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordGuess - Start</title>
+    <style>
+        body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0; /* Achtergrondkleur */
+}
+
+#start-screen {
+    text-align: center;
+}
+
+#title {
+    font-size: 3em;
+    color: #333; /* Kleur van de titel */
+}
+
+p {
+    font-size: 1.2em;
+    color: #666; /* Kleur van de tekst */
+}
+body {
+    animation: changeBackgroundColor 10s infinite alternate;
+}
+
+@keyframes changeBackgroundColor {
+    0% { background-color: #2cb5ff; }
+    50% { background-color: #ccffcc; }
+    100% { background-color: #f6c48e; }
+}
+#title {
+    font-size: 3em;
+    color: #333; /* Kleur van de titel */
+    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff, 0 0 40px #00ff99, 0 0 70px #00ff99, 0 0 80px #00ff99, 0 0 100px #00ff99, 0 0 150px #00ff99;
+}
+
+    </style>
+</head>
+<body>
+    <div id="start-screen">
+        <h1 id="title">WordGuess</h1>
+        <p>Druk op een toets om te beginnen...</p>
+    </div>
+    <script>
+        document.addEventListener("keydown", function(event) {
+    // Check of een toets is ingedrukt (alle toetsen worden geaccepteerd)
+    if (event.key) {
+        // Navigeer naar de inlogpagina
+        window.location.href = "login.php"; // Vervang "login.html" door de daadwerkelijke URL van je inlogpagina
+    }
+});
+    </script>
+</body>
+</html>

@@ -1,16 +1,6 @@
 <?php
-session_start(); // Start the session
-
-// Select a random word
 $words = array("woord", "ander", "spel", "code", "taak");
 $correct_word = str_split($words[array_rand($words)]);
-
-// Store correct word and guesses in the session
-if (!isset($_SESSION['correct_word'])) {
-    $_SESSION['correct_word'] = $correct_word;
-    $_SESSION['guesses'] = 0;
-    $_SESSION['game_status'] = "ongoing";
-}
 
 // Database connection
 $servername = "localhost";
@@ -18,56 +8,57 @@ $username = "root";
 $password = "";
 $database = "wordle_game";
 $conn = new mysqli($servername, $username, $password, $database);
+
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$naam = "";
-$woord = "";
-$score = 0;
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['deleteScoreId'])) {
+    $scoreId = $_POST['deleteScoreId'];
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SESSION['guesses'] < 5 && $_SESSION['game_status'] == "ongoing") {
-    $naam = isset($_POST['naam']) ? $_POST['naam'] : "";
-    $woord = isset($_POST['woord']) ? $_POST['woord'] : "";
+    // Delete the specific score from the database
+    $sql = "DELETE FROM scores WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $scoreId);
+    if ($stmt->execute()) {
+        $deleteMessage = "Score deleted successfully.";
+    } else {
+        $deleteMessage = "Error deleting score: " . $conn->error;
+    }
+    $stmt->close();
+}
 
-    if (!empty($naam) && !empty($woord)) {
-        for ($i = 0; $i < strlen($woord); $i++) {
-            if (isset($_SESSION['correct_word'][$i]) && $woord[$i] == $_SESSION['correct_word'][$i]) {
-                $score++;
-            }
-        }
-
-        if ($woord === implode($_SESSION['correct_word'])) {
-            $_SESSION['game_status'] = "won";
-        } else {
-            $_SESSION['guesses']++;
-            if ($_SESSION['guesses'] == 5) {
-                $_SESSION['game_status'] = "lost";
-            }
-        }
-
-        $stmt = $conn->prepare("INSERT INTO scores (naam, score, datum) VALUES (?, ?, NOW())");
-        $stmt->bind_param("si", $naam, $score);
-        $stmt->execute();
-        $stmt->close();
+$orderBy = "score DESC, datum ASC";
+$filter = "";
+if (isset($_POST['sort'])) {
+    switch ($_POST['sort']) {
+        case 'today':
+            $filter = "WHERE datum >= CURDATE()";
+            break;
+        case 'yesterday':
+            $filter = "WHERE datum = CURDATE() - INTERVAL 1 DAY";
+            break;
+        case 'all':
+        default:
+            $filter = "";
+            break;
     }
 }
 
-$sql = "SELECT naam, score FROM scores ORDER BY score DESC, datum ASC LIMIT 10";
+// Fetch top 10 scores
+$sql = "SELECT id, naam, score FROM scores $filter ORDER BY $orderBy LIMIT 10";
 $result = $conn->query($sql);
-
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wordle Spel</title>
+    <title>Wordle Admin</title>
     <link rel="stylesheet" type="text/css" href="../css/style.css">
     <style>
-        body {
+      body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
@@ -211,81 +202,74 @@ $result = $conn->query($sql);
             background-color: darkred;
         }
         #aanpassen {
-            position: absolute;
+            position:absolute;
             top: 5vh;
             right: -20vw;
             background-color: none;
             height: 0px;
             width: 200px;
-        }
-        #appelkaas {
-            position: absolute;
+    }
+    #appelkaas {
+        position:absolute;
             top: 55vh;
             right: 20vw;
             background-color: none;
             height: 50px;
             width: 200px;
-        }
-        .selected {
-            background-color: #ccc;
-        }
-        #wordleForm {
-        }
-        #result {
-            position: absolute;
-            top: 55vh;
-            right: 50vw;
-        }
+    }
+    #sorteerDate {
+        /* color: black;
+        font-size: 25px;
+        font-weight: 25px;
+        position: absolute;
+        top: -4vh; */
+    }
     </style>
 </head>
 <body>
     <h1>Wordle Spel</h1>
-
+    <form action="login.php" method="post">
+        <button>Login</button>
+    </form>
     <div class="container">
         <div class="instructions">
             <div class="header">Uitleg</div>
-            <p>Welcome to WordPlay!<br>
-            It's for people that love Wordle, but hate limits.<br>
-            Enjoy unlimited games, challenge others and learn about words.<br>
-            <p id="dailyPuzzleText">Daily Puzzle #103 - Fri, May 24</p>
-            <button id="tutorialButton">How to play</button>
+            <p>Welkom bij WordPlay!<br>
+            Het is voor mensen die van Wordle houden, maar een hekel hebben aan limieten.<br>
+            Geniet van onbeperkte spellen, daag anderen uit en leer over woorden.</p>
+            <p id="dailyPuzzleText">Dagelijkse Puzzel #103 - Vrij, Mei 24</p>
+            <button id="tutorialButton">Hoe te spelen</button>
         </div>
         <div class="leaderboard">
             <div class="header">Leaderboard</div>
             <form method="POST" id="aanpassen">
+                <!-- <p id="sorteerDate">Sorteer by date</p> -->
                 <button type="submit" name="sort" value="today">Vandaag</button>
                 <button type="submit" name="sort" value="yesterday">Gisteren</button>
                 <button type="submit" name="sort" value="all">Alle Tijd</button>
             </form>
-           <ul id="scoreList">
-                <?php
-                if ($result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        echo "<li>" . htmlspecialchars($row["naam"]) . ": " . htmlspecialchars($row["score"]) . "</li>";
-                    }
-                } else {
-                    echo "Geen scores gevonden.";
-                }
-                ?>
-            </ul>
+            <ul id="scoreList">
+<?php
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            echo "<li>" . htmlspecialchars($row["naam"]) . ": " . htmlspecialchars($row["score"]) . 
+                 " <form method='POST' style='display:inline;'>
+                 <button type='submit' id='appelkaas' name='deleteScoreId' value='" . $row['id'] . "' class='deleteButton'>Verwijderen</button></form></li>";
+        }
+    } else {
+        echo "<li>Geen scores gevonden.</li>";
+    }
+?>
+</ul>
         </div>
     </div>
-    <form id="wordleForm" method="POST" action="">
+    <form method="POST" action="">
         <label for="naam">Naam:</label>
-        <input type="text" id="naam" name="naam" value="<?php echo htmlspecialchars($naam); ?>" required>
+        <input type="text" id="naam" name="naam" required>
         <label for="woord">Woord:</label>
-        <input type="text" id="woord" name="woord" value="<?php echo htmlspecialchars($woord); ?>" required>
+        <input type="text" id="woord" name="woord" required>
         <input type="submit" value="Verzenden">
     </form>
-    <div id="result">
-        <?php
-        if ($_SESSION['game_status'] == "won") {
-            echo "<p>Congratulations! You guessed the word!</p>";
-        } elseif ($_SESSION['game_status'] == "lost") {
-            echo "<p>Game over! The correct word was " . implode($_SESSION['correct_word']) . ".</p>";
-        }
-        ?>
-        </div>
     <div id="tutorialModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -294,8 +278,8 @@ $result = $conn->query($sql);
             <ul>
                 <li>Je hebt 5 pogingen om het woord te raden.</li>
                 <li>Elke keer dat je een woord invoert, wordt aangegeven welke letters correct zijn.</li>
-                <li>Groen betekent dat de letter op de juiste plaats staat.</li>
-                <li>Oranje betekent dat de letter in het woord zit, maar op de verkeerde plaats.</li>
+                <li>Groene letters zijn correct en op de juiste plaats.</li>
+                <li>Gele letters zijn correct maar op de verkeerde plaats.</li>
             </ul>
         </div>
     </div>
@@ -307,18 +291,16 @@ $result = $conn->query($sql);
         btn.onclick = function() {
             modal.style.display = "block";
         }
-
         span.onclick = function() {
             modal.style.display = "none";
         }
-
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";
             }
         }
 
-        var correctWord = <?php echo json_encode($_SESSION['correct_word']); ?>;
+        var correctWord = <?php echo json_encode($correct_word); ?>;
         document.getElementById('wordleForm').addEventListener('submit', function(e) {
             e.preventDefault();
             var inputWord = document.getElementById('woord').value.split('');
@@ -332,33 +314,21 @@ $result = $conn->query($sql);
                     result += inputWord[i];
                 }
             }
-            document.getElementById('result').innerHTML += '<p>' + result + '</p>';
+            document.getElementById('scoreList').innerHTML = '<li>' + result + '</li>' + document.getElementById('scoreList').innerHTML;
             document.getElementById('woord').value = '';
-        });
-
-        var sortButtons = document.querySelectorAll('#aanpassen button');
-        sortButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                sortButtons.forEach(function(btn) {
-                    btn.classList.remove('selected');
-                });
-                button.classList.add('selected');
-            });
         });
 
         var today = new Date();
         var options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
         var formattedDate = today.toLocaleDateString('en-US', options);
         var puzzleNumber = 103;
-        var displayText = `Daily Puzzle #${puzzleNumber} - ${formattedDate}`;
-
-        document.addEventListener('DOMContentLoaded', (event) => {
+        var displayText = `Dagelijkse Puzzel #${puzzleNumber} - ${formattedDate}`;
+        document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('dailyPuzzleText').innerText = displayText;
         });
     </script>
 </body>
 </html>
-
 <?php
 $conn->close();
 ?>
